@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping List</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
+        .container { max-width: 400px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 8px 0; border-bottom: 1px solid #eee; }
+        form { display: flex; margin-top: 16px; }
+        input[type="text"] { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 16px; margin-left: 8px; border: none; background: #0078d7; color: #fff; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #005fa3; }
+        .strikethrough { text-decoration: line-through; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Shopping List</h1>
+        <ul id="list"></ul>
+        <form id="form">
+            <input type="text" id="item" placeholder="Add item..." required />
+            <button type="submit">Add</button>
+        </form>
+    </div>
+    <script>
+        const form = document.getElementById('form');
+        const list = document.getElementById('list');
+        const itemInput = document.getElementById('item');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const value = itemInput.value.trim();
+            if (value) {
+                const li = document.createElement('li');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.style.marginRight = '8px';
+                const span = document.createElement('span');
+                span.textContent = value;
+                checkbox.addEventListener('change', function() {
+                    if (checkbox.checked) {
+                        span.classList.add('strikethrough');
+                        // Move to bottom
+                        list.appendChild(li);
+                    } else {
+                        span.classList.remove('strikethrough');
+                        // Move to top (before first checked item)
+                        let firstChecked = null;
+                        for (let child of list.children) {
+                            const cb = child.querySelector('input[type="checkbox"]');
+                            if (cb && cb.checked) {
+                                firstChecked = child;
+                                break;
+                            }
+                        }
+                        if (firstChecked) {
+                            list.insertBefore(li, firstChecked);
+                        } else {
+                            list.insertBefore(li, list.firstChild);
+                        }
+                    }
+                });
+                li.appendChild(checkbox);
+                li.appendChild(span);
+                // Insert before first checked item
+                let firstChecked = null;
+                for (let child of list.children) {
+                    const cb = child.querySelector('input[type="checkbox"]');
+                    if (cb && cb.checked) {
+                        firstChecked = child;
+                        break;
+                    }
+                }
+                if (firstChecked) {
+                    list.insertBefore(li, firstChecked);
+                } else {
+                    list.appendChild(li);
+                }
+                itemInput.value = '';
+            }
+        });
+    </script>
+</body>
+</html>
