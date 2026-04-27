@@ -20,68 +20,79 @@
 <body>
     <div class="container">
         <h1>Shopping List</h1>
-        <ul id="list"></ul>
-        <form id="form">
-            <input type="text" id="item" placeholder="Add item..." required />
+        <h2>Food</h2>
+        <ul id="food-list"></ul>
+        <form id="food-form">
+            <input type="text" id="food-item" placeholder="Add food item..." required />
+            <button type="submit">Add</button>
+        </form>
+        <h2>Household</h2>
+        <ul id="household-list"></ul>
+        <form id="household-form">
+            <input type="text" id="household-item" placeholder="Add household item..." required />
             <button type="submit">Add</button>
         </form>
     </div>
     <script>
-        const form = document.getElementById('form');
-        const list = document.getElementById('list');
-        const itemInput = document.getElementById('item');
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const value = itemInput.value.trim();
-            if (value) {
-                const li = document.createElement('li');
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.style.marginRight = '8px';
-                const span = document.createElement('span');
-                span.textContent = value;
-                checkbox.addEventListener('change', function() {
-                    if (checkbox.checked) {
-                        span.classList.add('strikethrough');
-                        // Move to bottom
-                        list.appendChild(li);
-                    } else {
-                        span.classList.remove('strikethrough');
-                        // Move to top (before first checked item)
-                        let firstChecked = null;
-                        for (let child of list.children) {
-                            const cb = child.querySelector('input[type="checkbox"]');
-                            if (cb && cb.checked) {
-                                firstChecked = child;
-                                break;
-                            }
-                        }
-                        if (firstChecked) {
-                            list.insertBefore(li, firstChecked);
-                        } else {
-                            list.insertBefore(li, list.firstChild);
-                        }
-                    }
-                });
-                li.appendChild(checkbox);
-                li.appendChild(span);
-                // Insert before first checked item
-                let firstChecked = null;
-                for (let child of list.children) {
-                    const cb = child.querySelector('input[type="checkbox"]');
-                    if (cb && cb.checked) {
-                        firstChecked = child;
-                        break;
-                    }
-                }
-                if (firstChecked) {
-                    list.insertBefore(li, firstChecked);
-                } else {
-                    list.appendChild(li);
-                }
-                itemInput.value = '';
+        function setupSection(formId, listId, inputId, storageKey) {
+            const form = document.getElementById(formId);
+            const list = document.getElementById(listId);
+            const itemInput = document.getElementById(inputId);
+
+            // Load items from localStorage
+            let items = [];
+            try {
+                items = JSON.parse(localStorage.getItem(storageKey)) || [];
+            } catch (e) { items = []; }
+
+            function saveItems() {
+                localStorage.setItem(storageKey, JSON.stringify(items));
             }
-        });
+
+            function renderItems() {
+                list.innerHTML = '';
+                // Unchecked first, then checked
+                const unchecked = items.filter(i => !i.checked);
+                const checked = items.filter(i => i.checked);
+                function renderList(arr) {
+                    arr.forEach(item => {
+                        const li = document.createElement('li');
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.style.marginRight = '8px';
+                        checkbox.checked = !!item.checked;
+                        const span = document.createElement('span');
+                        span.textContent = item.text;
+                        if (item.checked) span.classList.add('strikethrough');
+                        checkbox.addEventListener('change', function() {
+                            item.checked = checkbox.checked;
+                            saveItems();
+                            renderItems();
+                        });
+                        li.appendChild(checkbox);
+                        li.appendChild(span);
+                        list.appendChild(li);
+                    });
+                }
+                renderList(unchecked);
+                renderList(checked);
+            }
+
+            renderItems();
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const value = itemInput.value.trim();
+                if (value) {
+                    items.push({ text: value, checked: false });
+                    saveItems();
+                    renderItems();
+                    itemInput.value = '';
+                }
+            });
+        }
+        setupSection('food-form', 'food-list', 'food-item', 'shoppingListFood');
+        setupSection('household-form', 'household-list', 'household-item', 'shoppingListHousehold');
     </script>
 </body>
 </html>
